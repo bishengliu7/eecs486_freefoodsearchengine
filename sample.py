@@ -7,4 +7,4 @@ def sample(filename, num, outfile):
     f.write(i)
 
 if __name__ == "__main__":
-  sample('events.csv', 100, 'trainevets.csv')
+  sample('events.csv', 200, 'trainevets.csv')
