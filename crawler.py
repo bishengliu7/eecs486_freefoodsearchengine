@@ -88,5 +88,6 @@ if __name__ == "__main__":
 
     # events.append(event)
 
-    eventwriter.writerow([event['id'], event['title'], event['desc'], event['loc'], event['date']])
+    eventwriter.writerow([event['id'], event['title'], event['desc'], event['loc'],
+       event['date'], event['tags']])
           
