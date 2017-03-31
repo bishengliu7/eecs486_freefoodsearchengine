@@ -1,9 +1,9 @@
 from bs4 import BeautifulSoup
 from urlparse import urlparse
-import requests
 import sys
-from collections import defaultdict
 from urlparse import urljoin
+import requests
+import csv
 
 def parseURL(url, root):
   # empty url
@@ -31,67 +31,62 @@ def parseURL(url, root):
     return ""
 
 if __name__ == "__main__":
-  if len(sys.argv) < 3:
-    print ("Missing arguments")
-    exit(1)
-  urlFile = str(sys.argv[1])
-  maxUrl = int(sys.argv[2])
+  baseUrl = "http://events.umich.edu/event/"
 
-  urls = []
-  with open(urlFile, 'r') as infile:
-    urls = infile.read().split('\n')
+  csvfile = open('events.csv', 'wb')
+  eventwriter = csv.writer(csvfile, delimiter=',')
+  eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags'])
 
-  visited = []
-  viewed = set()
-  links = defaultdict(list)
-
-  for url in urls:
-    viewed.add(url)
-
-  while len(visited) < maxUrl and len(urls) > 0:
-    url = urls[0]
-    del urls[0]
-
+  events = []
+  for eventId in range(1,41000):
+    url = baseUrl + str(eventId)
     try:
-      r = requests.get(url, timeout=10)
+      r = requests.get(url, timeout=5)
     except requests.exceptions.Timeout:
       print "Timeout"
-      print url
       continue
     except:
       print "Connect error"
-      print (url)
       continue
-
-    if "text/html" not in r.headers["content-type"]:
-      continue
-
-    visited.append(url)
 
     soup = BeautifulSoup(r.text, "html.parser")
 
-    for link in soup.find_all('a'):
-      try:
-        href = str(parseURL(link.get('href'), r.url))
-      except UnicodeEncodeError:
-        continue
+    if len(soup.findAll("h2", { "class" : "page-title" })) > 0:
+      continue
 
-      if href != "":
-        if not (href in links[url]):
-          links[url].append(href)
-        if not (href in viewed):
-          urls.append(href)
-          viewed.add(href)
+    # print (eventId, soup.findAll("h1", { "class" : "title" }))
+    # get title, description, location, date
 
-  with open('crawler.output', 'w') as outfile:
-    for url in visited:
-      outfile.write(url + '\n')
+    event = {'id': eventId,
+             'title': "",
+             'desc': "",
+             'loc': "",
+             'date': [],
+             'tags': []}
 
-  with open('crawler.link', 'w') as outfile:
-    for (k, l) in links.iteritems():
-      for url in l:
-        if url == "http://www.eecs.umich.edu":
-          outfile.write(k + ' ' + visited[0] + '\n')
-        elif url in visited:
-          outfile.write(k + ' ' + url + '\n')
+    event['title'] = str(soup.findAll("h1", { "class" : "title" })[0].get_text().encode('utf-8'))
+
+    fetch = soup.findAll("div", { "class" : "event-description" })
+    if fetch:
+      event['desc'] = str(' '.join(fetch[0].get_text().encode('utf-8').split()))
+      if not event['desc']:
+         continue
+    else:
+      continue
+
+    fetch = soup.findAll("i", { "class" : "fa-location-arrow" })
+    if fetch:
+      event['loc'] = str(' '.join(fetch[0].parent.get_text().encode('utf-8').split()))
+    
+    for i in soup.findAll("time"):
+      event['date'].append(str(i['datetime']))
+
+    for i in soup.findAll("i", { "class" : "fa-tags" }):
+      event["tags"].append(str(i.parent.get_text().encode('utf-8').strip()))
+
+    print(eventId)
+
+    # events.append(event)
+
+    eventwriter.writerow([event['id'], event['title'], event['desc'], event['loc'], event['date']])
           
