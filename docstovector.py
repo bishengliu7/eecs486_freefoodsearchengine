@@ -24,22 +24,18 @@ def normalizedVector(tokens):
 	total = 0.0
 	for key in vector.keys():
 		total += vector[key] * vector[key]
-	for key in vector.keys():
-		vector[key] /= total**0.5
+	# for key in vector.keys():
+	# 	vector[key] /= total**0.5
 
 	return vector
 
+def getCos(vec1, vec2):
+	score = 0.0
+	for key in vec1.keys():
+		score += vec1[key] * vec2[key]
+	return score
 
-
-if __name__ == "__main__":
-	if len(sys.argv) < 2:
-		print("python choosebytags.py csv_file")
-		sys.exit(0)
-
-	csv_file = sys.argv[1]
-	beta = 1.0
-	gamma = 1.0
-	alpha = 1.0
+def opt_query(csv_file, alpha, beta, gamma):
 
 	relevant_vec = defaultdict(float)
 	irrelevant_vec = defaultdict(float)
@@ -54,13 +50,14 @@ if __name__ == "__main__":
 			# tags = stringToList(row['tags'])
 			desc = row['desc']
 			desc = re.sub("[^a-zA-Z$']+", " ", desc).lower()
-
+			
 			label = row['label']
 
 			desc_token = tokenizeText(desc)
 			desc_token = removeStopwords(desc_token)
 			if not desc_token:
 				continue
+			desc_token = stemWords(desc_token)
 
 			vector = normalizedVector(desc_token)
 
@@ -77,13 +74,76 @@ if __name__ == "__main__":
 	query = defaultdict(float)
 	query['free'] = 0.707 * alpha
 	query['food'] = 0.707 * alpha
+	# print(relevant_doc, irrelevant_doc)
 	for key in relevant_vec.keys():
 		query[key] += relevant_vec[key] * beta / relevant_doc
 	for key in irrelevant_vec.keys():
-		query[key] += irrelevant_vec[key] * gamma / irrelevant_doc
+		query[key] -= irrelevant_vec[key] * gamma / irrelevant_doc
 
-	for key in query.keys():
-		print(key, query[key])
+	return query
+
+
+
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print("python choosebytags.py csv_file")
+		sys.exit(0)
+
+	csv_file = sys.argv[1]
+	beta = 1.0
+	gamma = 1.0
+	alpha = 1.0
+
+	query = opt_query(csv_file, alpha, beta, gamma)
+
+	# doc_scores = sorted(query.items(), key=operator.itemgetter(1))
+	# doc_scores.reverse()
+	# print(doc_scores)
+	query['pm'] = 0
+	query['am'] = 0
+
+	test = '350.csv'
+	result = defaultdict(float)
+	labels = defaultdict()
+	with open(test, 'rU') as csvfile:
+		reader = csv.DictReader(csvfile)
+		for row in reader:
+			docid = row['id']
+			# title = row['title']
+			# tags = stringToList(row['tags'])
+			desc = row['desc']
+			desc = re.sub("[^a-zA-Z$']+", " ", desc).lower()
+			
+			label = row['label']
+
+			desc_token = tokenizeText(desc)
+			desc_token = removeStopwords(desc_token)
+			if not desc_token:
+				continue
+
+			vector = normalizedVector(desc_token)
+
+			cos = getCos(vector, query)
+			result[docid] = cos
+			labels[docid] = label
+
+	scores = sorted(result.items(), key=operator.itemgetter(1))
+	scores.reverse()
+	level = 0.0
+	correct = 0.0
+	score = []
+	for x in scores:
+		print(x[0], x[1], labels[x[0]])
+		level += 1
+		if labels[x[0]] == 'T':
+			correct += 1
+			score.append(correct / level)
+	print(correct, level)
+	print(score)
+
+	print(sum(score) / correct)
+
 
 
 
