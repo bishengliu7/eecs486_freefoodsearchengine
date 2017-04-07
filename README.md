@@ -9,3 +9,5 @@ TODO:
 2. implement Standard Rocchio Method (threshold)
 3. test method on remaining dataset
 4. hand evaluate
+5. tags for decision tree
+6. dollar mark
