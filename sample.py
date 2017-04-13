@@ -7,6 +7,8 @@ def sample(filename, num, outfile):
   for i in random.sample(list(open(filename)), num):
     f.write(i)
 
+
+
 if __name__ == "__main__":
   if len(sys.argv) < 4:
     print("python sample.py csv_filename sample_size, output_csv_filename")

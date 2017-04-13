@@ -103,7 +103,7 @@ if __name__ == "__main__":
 	query['pm'] = 0
 	query['am'] = 0
 
-	test = '350.csv'
+	test = 'sample_tagged_200.csv'
 	result = defaultdict(float)
 	labels = defaultdict()
 	with open(test, 'rU') as csvfile:
@@ -133,17 +133,19 @@ if __name__ == "__main__":
 	level = 0.0
 	correct = 0.0
 	score = []
+	max_score = 0.0
 	for x in scores:
 		print(x[0], x[1], labels[x[0]])
 		level += 1
 		if labels[x[0]] == 'T':
 			correct += 1
 			score.append(correct / level)
+			max_score = max(max_score, sum(score) / correct)
 	print(correct, level)
 	print(score)
 
 	print(sum(score) / correct)
-
+	print('max_map')
 
 
 
