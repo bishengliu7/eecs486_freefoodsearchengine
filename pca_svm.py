@@ -73,7 +73,9 @@ def tfidf_test(corpus, inverted_index, idf):
 	return test_vec
 
 def export_csv(idx):
-	output = open('svm_output.csv', 'wb')
+	csvoutput = open('svm_output.csv', 'wb')
+	writer = csv.writer(csvoutput, delimiter = ',')
+  	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
 
 	with open ('combined.csv', 'rb') as csvfile:
 		read = csv.reader(csvfile, delimiter = ',')
@@ -82,9 +84,8 @@ def export_csv(idx):
 		# print (type(idx))
 		for row in read:
 			# print ((row))
-			row = ','.join(row)
 			if i in idx:
-				output.write(row + '\n')
+				writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6]])
 			i += 1
 
 if __name__ == "__main__":
@@ -98,10 +99,10 @@ if __name__ == "__main__":
 		else:
 			label[i] = 0
 	# print (label)
-	corpus_train = corpus[:549]
-	corpus_test = corpus[549:]
-	label_train = label[:549]
-	label_test = label[549:]
+	corpus_train = corpus[:546]
+	corpus_test = corpus[546:]
+	label_train = label[:546]
+	label_test = label[546:]
 
 	# calculate tfidf for each documents
 	word_vec, inverted_index, idf = tfidf(corpus_train)
