@@ -57,7 +57,7 @@ def opt_query(csv_file, alpha, beta, gamma):
 			desc_token = removeStopwords(desc_token)
 			if not desc_token:
 				continue
-			desc_token = stemWords(desc_token)
+			# desc_token = stemWords(desc_token)
 
 			vector = normalizedVector(desc_token)
 
@@ -72,8 +72,8 @@ def opt_query(csv_file, alpha, beta, gamma):
 
 
 	query = defaultdict(float)
-	query['free'] = 0.707 * alpha
-	query['food'] = 0.707 * alpha
+	query['free'] = 1.0 * alpha
+	query['food'] = 1.0 * alpha
 	# print(relevant_doc, irrelevant_doc)
 	for key in relevant_vec.keys():
 		query[key] += relevant_vec[key] * beta / relevant_doc
@@ -93,17 +93,17 @@ if __name__ == "__main__":
 	csv_file = sys.argv[1]
 	beta = 1.0
 	gamma = 1.0
-	alpha = 1.0
+	alpha = 0.707
 
 	query = opt_query(csv_file, alpha, beta, gamma)
 
-	# doc_scores = sorted(query.items(), key=operator.itemgetter(1))
-	# doc_scores.reverse()
-	# print(doc_scores)
-	query['pm'] = 0
-	query['am'] = 0
+	doc_scores = sorted(query.items(), key=operator.itemgetter(1))
+	doc_scores.reverse()
+	print(doc_scores)
+	# query['pm'] = 0
+	# query['am'] = 0
 
-	test = 'sample_tagged_200.csv'
+	test = 'svm_output.csv'
 	result = defaultdict(float)
 	labels = defaultdict()
 	with open(test, 'rU') as csvfile:
@@ -121,6 +121,8 @@ if __name__ == "__main__":
 			desc_token = removeStopwords(desc_token)
 			if not desc_token:
 				continue
+			# desc_token = stemWords(desc_token)
+
 
 			vector = normalizedVector(desc_token)
 
@@ -134,18 +136,30 @@ if __name__ == "__main__":
 	correct = 0.0
 	score = []
 	max_score = 0.0
+	larger0 = 0
+	l_0_t = 0
 	for x in scores:
-		print(x[0], x[1], labels[x[0]])
+		if x[1] > 0.0:
+			print(x[0], x[1], labels[x[0]])
+			larger0 += 1
+			if labels[x[0]] == 'T':
+				l_0_t += 1
+
 		level += 1
 		if labels[x[0]] == 'T':
 			correct += 1
 			score.append(correct / level)
+			# print('map: ', sum(score) / correct)
+			# print('correct: ', correct)
 			max_score = max(max_score, sum(score) / correct)
+
+	print(l_0_t, larger0)
+
 	print(correct, level)
 	print(score)
 
-	print(sum(score) / correct)
-	print('max_map')
+	print("max: " + str(max_score))
+	# print("final: " + str(sum(score) / correct))
 
 
 
