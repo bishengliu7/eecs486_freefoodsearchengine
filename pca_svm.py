@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 
 def read_data():
-  	with open('train_250.csv', 'rb') as csvfile:
+  	with open('combined.csv', 'rb') as csvfile:
 	  	read = csv.reader(csvfile, delimiter = ',')
 	  	doc = [];
 	  	i = 0
@@ -72,6 +72,20 @@ def tfidf_test(corpus, inverted_index, idf):
 			j += 1
 	return test_vec
 
+def export_csv(idx):
+	output = open('svm_output.csv', 'wb')
+
+	with open ('combined.csv', 'rb') as csvfile:
+		read = csv.reader(csvfile, delimiter = ',')
+		i = 0
+		# print (type(i))
+		# print (type(idx))
+		for row in read:
+			# print ((row))
+			row = ','.join(row)
+			if i in idx:
+				output.write(row + '\n')
+			i += 1
 
 if __name__ == "__main__":
 	# id_dic: a dictionary mapping index to the event id
@@ -84,21 +98,21 @@ if __name__ == "__main__":
 		else:
 			label[i] = 0
 	# print (label)
-	corpus_train = corpus[:200]
-	corpus_test = corpus[200:]
-	label_train = label[:200]
-	label_test = label[200:]
+	corpus_train = corpus[:549]
+	corpus_test = corpus[549:]
+	label_train = label[:549]
+	label_test = label[549:]
 
 	# calculate tfidf for each documents
 	word_vec, inverted_index, idf = tfidf(corpus_train)
 
 	# use pca to reduce dimension
-	pca = PCA(n_components = 100)
+	pca = PCA(n_components = 300)
 	new_feature_vector = pca.fit_transform(word_vec)
 	print (new_feature_vector.shape)
 
 	# train SVM with linear kernel
-	clf = SVC(kernel = 'linear', class_weight = {0: 0.048, 1: 0.952})
+	clf = SVC(kernel = 'linear', class_weight = {0: 1, 1: 0.4})
 	clf.fit(new_feature_vector, label_train)
 
 	# test 
@@ -106,8 +120,22 @@ if __name__ == "__main__":
 	new_test_feature = pca.transform(test_vec)
 
 	label_pred = clf.predict(new_test_feature)
-	print (label_pred.shape)
 	acc = float(sum(label_pred == label_test)) / len(label_test)
-	print (acc)
-	print (sum(label_pred == 1))
-	print (sum(label_pred == 0))
+	print ("Accuracy: " + str(acc))
+	print ("free food events in test data: " + str(sum(label_pred == 1)))
+	# print (sum(label_test == 1)
+	print ("ground truth free food events: " + str(sum(label_test)))
+	# print ("non free food ")
+	# calculate recall
+	correct_pred = 0
+	for i in range(len(label_test)):
+		if (label_pred[i] == label_test[i] and label_pred[i] == 1):
+			correct_pred += 1
+	precision = float(correct_pred) / sum(label_pred)
+	print ("correctly retrieved: " + str(correct_pred))
+	print ("Precision: " + str(precision))
+
+
+	# export to csv
+	idx = np.array(np.where(label_pred == 1))
+	export_csv(idx)
