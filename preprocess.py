@@ -1,191 +1,187 @@
-import os
+'''
+Name: Jiachen Wang
+UniqName: jiachenw
+'''
+
+
 import re
-from sets import Set
+import PorterStemmer
+import preprocess_helper
 import sys
-from stem import PorterStemmer
-import operator
-import string
+import glob
+from collections import Counter
 
-# Name: Bisheng Liu
-# uniqname: bisheng
+def removeSGML(string):
+	return re.sub('<.*?>', '', string);
 
+contractions = {"aren\'t" : "are not", "can\'t": "cannot", 
+		"could\'ve": "could have", "couldn\'t": "could not", 
+		"didn\'t": "did not", "doesn\'t" : "does not", 
+		"don\'t": "do not", "gonna": "going to", "hadn\'t": "had not", 
+		"hasn\'t": "has not", "haven\'t": "have not", "\'ll": "will", 
+		"isn\'t": "is not", "i\'m": "i am", "it\'d": "it would",
+		"would\'ve": "would have", "mightn\'t": "might not", "mustn\'t": "must not",
+		"shan\'t": "shall not", "should\'ve": "should have", "shouldn\'t": "should not",
+		"there\'re": "there are", "they\'d\'ven\'t": "they would not have",
+		"wasn\'t": "was not", "weren\'t": "were not", "you\'re": "you are",
+		};
+contractions_re = re.compile('(%s)' % '|'.join(contractions.keys()));
 
-months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
-		 'sep', 'oct', 'nov', 'dec']
+def expand_contractions(string, contractions = contractions):
+	def replace(match):
+		return contractions[match.group(0)];
+	return contractions_re.sub(replace, string);
 
+def tokenizeText(string):
 
-def removeSGML(input):
-	out = ""
-	tag = False
-	quote = False
-	for c in input:
-		if c == '<' and not quote:
-			tag = True
-		elif c == '>' and not quote:
-			tag = False
-		elif (c == '"' or c == "'") and tag:
-			quote = not quote
-		elif not tag:
-			out += c
-	return out
+	string = string.lower();
 
+	''' Assume special cases only happen with '\.' '\'', '\-', '\,'
+		replace all the character other than alphanumeric and these above with whitespace '''
 
-def tokenizeText(input):
-	input = input.strip()
-	input = input.lower()
-	temp = re.split('\s+', input)
-	tokens = []
-	for word in temp:
-		if word == '' or word in string.punctuation:
-			continue
-		tocheck = []
-		tocheck.append(word)
-		for i in range(0, len(tocheck)):
-			w = tocheck[0]
-			tocheck.pop(0)
-			if ',' in w:
-				commasplit = re.split('\,', w)
-				alldigit = True
-				clean = ""
-				# remove comma in digits to make sure digits are in the same format
-				for x in commasplit: 
-					if x.isdigit():
-						if clean != "":
-							clean += ',' + x
-						else:
-							clean += x
-					if x != '' and (not x.isdigit()):
-						alldigit = False
-
-				if alldigit:
-					tocheck.append(clean)
-				else:
-					for x in commasplit:
-						if x != '':
-							tocheck.append(x)
-			else:
-				tocheck.append(w)
+	string = re.sub(r'[^a-z0-9.,\'-/]', r' ', string)
 
 
-		for i in range(0, len(tocheck)):
-			w = tocheck[0]
-			tocheck.pop(0)
-			if '.' in w:
-				dotsplit = re.split('\.', w)
-				if '' in dotsplit:
-					alldigit = True
-					toadd = ""
-					#remove extra dot at the end of numbers
-					for i in range(0, len(dotsplit) - 1):
-						if toadd != "":
-							toadd += '.'
-						if not dotsplit[i].isdigit():
-							alldigit = False
-							break
-						toadd += dotsplit[i]
-					if alldigit:
-						tocheck.append(toadd)
-					else:
-						tocheck.append(w) #acronyms, abbreviations
+	''''''''''''''''''''''''' tokenization of "\'" '''''''''''''''''''''''''''
 
-				else:
-					for x in dotsplit:
-						tocheck.append(x)
-			else:
-				tocheck.append(w)
+	# contractions
+	string = expand_contractions(string);
 
-		for i in range(0, len(tocheck)):
-			w = tocheck[0]
-			tocheck.pop(0)
-			if "'" in w:
-				if w == "i'm":
-					tocheck += ['i', 'am']
-					continue
+	# possessive: if some alphanumeric word is followed by ''s' and a whitespace, 
+	# ''s' is considered to be possessive. 
+	# someone's => someone 's
+	string = re.sub(r'([0-9a-z]+)(\'s) ', r'\1 \2', string);
+	# when some alphanumeric word ending with 's' is followed by ''s' and a whitespace,
+	# the word is regarded as a plural form
+	# girls' => girls 's
+	string = re.sub(r'([0-9a-z]+[s])(\') ', r'\1 \2s', string);
 
-				quotesplit = w.split("'")
-				
-				for j in range(0, len(quotesplit)):
-					if quotesplit[j] != '':
-						if quotesplit[j] == 's':
-							tocheck.append("'s")
-						elif quotesplit[j] == 're':
-							tocheck.append("are")
-						else:
-							tocheck.append(quotesplit[j])
-				
-			else:
-				tocheck.append(w)
-
-		tokens += tocheck
-
-	toreturn = []
-	for word in tokens:
-		if word != "":
-			toreturn.append(word)
-
-	return toreturn
-
-def removeStopwords(tokens):
-	f = open("stopwords")
-	stopwords = []
-	for line in f:
-		stopwords.append(line.strip())
-	f.close()
-	cleaned = []
-	for token in tokens:
-		if token not in stopwords:
-			cleaned.append(token)
-	return cleaned
-
-def stemWords(tokens):
-	p = PorterStemmer()
-	result = []
-	for token in tokens:
-		stemmed = p.stem(token, 0, len(token) - 1)
-		result.append(stemmed)
-	return result
+	# tokenize quotation: when there are some words beteen 2 '\'', it is considered to be quotation
+	# 'some words here' => some words here
+	string = re.sub(r'[\'](^[\']+)[\'](^[0-9a-z])', r' \1 ', string);
 
 
+
+
+	''''''''''''''''''''''''' tokenization of date '''''''''''''''''''''''''''
+
+	# for all the dates, january 18, 2017 => jan.18.2017
+	# replace the month with its abbreviation
+	month = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+	monthabbre = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sept.", "oct.", "nov.", "dec."];
+	for i in range(len(month)):
+		string = re.sub(month[i] + r' {1}([0-9]{1,2}), ([0-9]{4})', monthabbre[i] + r'\1.\2', string);
+
+
+
+
+
+	''''''''''''''''''''''''' tokenization of "\." '''''''''''''''''''''''''''
+
+	# When there are both whitespace before and after '.', it works as a period.
+	# then it will be replaced by a whitespace
+	punct = '\.';
+	string = preprocess_helper.checkPeriod(punct, string);
+
+
+
+
+
+
+	''''''''''''''''''''''''' tokenization of "\," '''''''''''''''''''''''''''
+
+	# ',' is part of a number if the three characters after it are all digits, the fourth one is non-digit and the previous character is also digit.
+	# keep 100,000 as 100,000. 
+	# for cases like "some words, and some words", replace the comma with whitespace
+	punct = ',';
+	pattern1 = re.compile('^([0-9][0-9][0-9]\D)');
+	pattern2 = re.compile('([0-9])$');
+	string = preprocess_helper.checkComma(punct, string, pattern1, pattern2);
+
+
+
+
+	''''''''''''''''''''''''' tokenization of "\-" '''''''''''''''''''''''''''
+
+	# if hyphen is between two alphanumeric characters, it is considered to be part of phrases.
+	# otherwise, replace it with a whitespace
+	punct = '\-';
+	string = preprocess_helper.checkHyphen(punct, string);
+
+
+
+
+
+	string = string.strip();
+	mylist = re.split('\s+', string);
+
+	return mylist;
+
+
+
+
+def removeStopwords(mylist):
+	with open('stopwords') as f:
+		stopwords = f.readlines();
+	stopwords = [word.strip() for word in stopwords]
+	mylist = [word for word in mylist if word not in stopwords];
+	return mylist;
+
+
+
+
+
+def stemWords(mylist):
+	p = PorterStemmer.PorterStemmer();
+	for index in range(1,len(mylist)):
+		newword = p.stem(mylist[index], 0, len(mylist[index])-1);
+		if newword != mylist[index]:
+			mylist[index] = newword;
+	return mylist;
+
+
+	
 
 if __name__ == '__main__':
-
-	if len(sys.argv) > 1:
+	
+	path = './' + sys.argv[1] + '*';
+#	path = './cranfieldDocs/*';
+	files = glob.glob(path);
+	finallist = [];
+	i = 1;
+	for file in files:
+		f = open(file, 'r');
+		contents = f.read();
 		
 
-		directory = sys.argv[1]
-		files = os.listdir(directory)
+		string = removeSGML(contents); # input: string, output: string
+		string = string + " ";
+		mylist = tokenizeText(string); # input: string, output: list
 
-		vocabulary = 0
-		words = 0
-		counter = {}
+		mylist = removeStopwords(mylist); # input: list, output: list
+		mylist = stemWords(mylist); # input: list, output: list
+		f.close();
+		finallist.extend(mylist);
 
-		for fn in files:
-			f = open(directory + fn)
-			for line in f:
-				temp = removeSGML(line)
-				tokens = tokenizeText(temp)
-				tokens = removeStopwords(tokens)
-				if tokens:
-					tokens = stemWords(tokens)
-					for w in tokens:
-						words += 1
-						if str(w) not in counter.keys():
-							vocabulary += 1
-							counter[str(w)] = 1
-						else:
-							counter[str(w)] += 1
-			f.close()
-			
-		sorted_dict = sorted(counter.items(), key=operator.itemgetter(1))	
-		sorted_dict.reverse()
+	totalCount = len(finallist);
+	vocabCount = len(list(set(finallist)));
 
-		output = open("preprocess.output", 'w')
-		output.write("Words " + str(words) + '\n')
-		output.write("Vocabulary " + str(vocabulary) + '\n')
-		output.write("Top 50 Words" + '\n')
-		for i in range(0, 50):
-			output.write(str(sorted_dict[i][0]) + " " + str(sorted_dict[i][1]) + "\n")
+	f = open('preprocess.output', 'w');
 
+	f.write("Words " + str(totalCount) + '\n');
+	f.write("Vocabulary " + str(vocabCount) + '\n');
+	f.write("Top 50 words\n")
+	counts = Counter(finallist);
+	for word, count in counts.most_common(50):
+		f.write(word + ' ' + str(count) + '\n');
 
-
+	# minimum number of unique words accounting for 25% of the total words
+	freqSum = 0;
+	numwords = 0
+	for word, count in counts.most_common(vocabCount):
+		freqSum += count;
+		numwords = numwords + 1;
+		if freqSum >= totalCount * 0.25:
+			break;
+	print (numwords);
 
