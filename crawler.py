@@ -33,7 +33,7 @@ def parseURL(url, root):
 if __name__ == "__main__":
   baseUrl = "http://events.umich.edu/event/"
 
-  csvfile = open('events.csv', 'wb')
+  csvfile = open('final_events.csv', 'wb')
   eventwriter = csv.writer(csvfile, delimiter=',')
   eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags'])
 

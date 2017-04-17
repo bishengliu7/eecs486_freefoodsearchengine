@@ -4,9 +4,10 @@ import math
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
+from sklearn.naive_bayes import MultinomialNB
 
-def read_data(filename):
-  	with open(filename, 'rb') as csvfile:
+def read_data():
+  	with open('combined.csv', 'rb') as csvfile:
 	  	read = csv.reader(csvfile, delimiter = ',')
 	  	doc = [];
 	  	i = 0
@@ -19,8 +20,6 @@ def read_data(filename):
 	  		label.append(row[6])
 	  		i += 1
   	return id_dic, doc, label
-
-
 
 def tfidf(corpus):
 	inverted_index = {}
@@ -74,61 +73,40 @@ def tfidf_test(corpus, inverted_index, idf):
 			j += 1
 	return test_vec
 
-def export_csv(idx):
-	csvoutput = open('svm_output.csv', 'wb')
-	writer = csv.writer(csvoutput, delimiter = ',')
-  	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
 
-	with open ("sample_tagged_200.csv", 'rb') as csvfile:
-		read = csv.reader(csvfile, delimiter = ',')
-		i = 0
-		# print (type(i))
-		# print (type(idx))
-		for row in read:
-			if i in idx:
-				writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6]])
-			i += 1
 
 if __name__ == "__main__":
 	# id_dic: a dictionary mapping index to the event id
 	# corpus: a list. description + tag
-	id_dic, corpus_train, label_train = read_data('combined.csv')
-	test_id_dic, corpus_test, label_test = read_data("sample_tagged_200.csv")
+	id_dic, corpus, label = read_data()
 	# print (label)
-	for i in range(len(label_train)):
-		if label_train[i] == 'T':
-			label_train[i] = 1
+	for i in range(len(label)):
+		if label[i] == 'T':
+			label[i] = 1
 		else:
-			label_train[i] = 0
-	for i in range(len(label_test)):
-		if label_test[i] == 'T':
-			label_test[i] = 1
-		else:
-			label_test[i] = 0
+			label[i] = 0
 	# print (label)
+	corpus_train = corpus[:549]
+	corpus_test = corpus[549:]
+	label_train = label[:549]
+	label_test = label[549:]
 
 	# calculate tfidf for each documents
 	word_vec, inverted_index, idf = tfidf(corpus_train)
 
-	# use pca to reduce dimension
-	pca = PCA(n_components = 300)
-	new_feature_vector = pca.fit_transform(word_vec)
-	print (new_feature_vector.shape)
-
-	# train SVM with linear kernel
-	clf = SVC(kernel = 'linear', class_weight = {0: 1, 1: 0.4})
-	clf.fit(new_feature_vector, label_train)
+	# naive bayes
+	clf = MultinomialNB()
+	clf.fit(word_vec, label_train)
 
 	# test 
 	test_vec = tfidf_test(corpus_test, inverted_index, idf)
-	new_test_feature = pca.transform(test_vec)
-
-	label_pred = clf.predict(new_test_feature)
+	label_pred = clf.predict(test_vec)
 	acc = float(sum(label_pred == label_test)) / len(label_test)
 	print ("Accuracy: " + str(acc))
 	print ("free food events in test data: " + str(sum(label_pred == 1)))
+	# print (sum(label_test == 1)
 	print ("ground truth free food events: " + str(sum(label_test)))
-
+	# print ("non free food ")
 	# calculate recall
 	correct_pred = 0
 	for i in range(len(label_test)):
@@ -137,8 +115,4 @@ if __name__ == "__main__":
 	precision = float(correct_pred) / sum(label_pred)
 	print ("correctly retrieved: " + str(correct_pred))
 	print ("Precision: " + str(precision))
-
-
-	# export to csv
-	idx = np.array(np.where(label_pred == 1))
-	export_csv(idx)
+	

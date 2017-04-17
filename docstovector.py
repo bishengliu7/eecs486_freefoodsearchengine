@@ -100,16 +100,17 @@ if __name__ == "__main__":
 	doc_scores = sorted(query.items(), key=operator.itemgetter(1))
 	doc_scores.reverse()
 	print(doc_scores)
-	# query['pm'] = 0
-	# query['am'] = 0
 
-	test = 'svm_output.csv'
+	csv_dict = defaultdict()
+
+	test = 'sample_tagged_200.csv'
 	result = defaultdict(float)
 	labels = defaultdict()
 	with open(test, 'rU') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
 			docid = row['id']
+			csv_dict[docid] = row
 			# title = row['title']
 			# tags = stringToList(row['tags'])
 			desc = row['desc']
@@ -160,6 +161,16 @@ if __name__ == "__main__":
 
 	print("max: " + str(max_score))
 	# print("final: " + str(sum(score) / correct))
+
+	csvfile_out = open("opt_q_out.csv", 'wb')
+	eventwriter = csv.writer(csvfile_out, delimiter=',')
+	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
+
+	for x in scores:
+		if x[1] > 0.0:
+			row = csv_dict[x[0]]
+			eventwriter.writerow([row['id'], row['title'], row['desc'], row['loc'],
+			   row['date'], row['tags'], row['label']])
 
 
 
