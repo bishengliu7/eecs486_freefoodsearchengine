@@ -63,9 +63,11 @@ if __name__ == "__main__":
              'loc': "",
              'date': [],
              'tags': []}
-
-    event['title'] = str(soup.findAll("h1", { "class" : "title" })[0].get_text().encode('utf-8'))
-
+    if soup.findAll("h1", { "class" : "title" }):
+      event['title'] = str(soup.findAll("h1", { "class" : "title" })[0].get_text().encode('utf-8'))
+    else:
+      continue
+      
     fetch = soup.findAll("div", { "class" : "event-description" })
     if fetch:
       event['desc'] = str(' '.join(fetch[0].get_text().encode('utf-8').split()))

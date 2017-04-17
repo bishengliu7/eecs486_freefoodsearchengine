@@ -74,10 +74,10 @@ def tfidf_test(corpus, inverted_index, idf):
 			j += 1
 	return test_vec
 
-def export_csv(idx):
+def export_csv(idx, label_score):
 	csvoutput = open('output/pca_svm.output', 'wb')
 	writer = csv.writer(csvoutput, delimiter = ',')
-  	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
+  	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
 
 	with open ("sample_tagged_200.csv", 'rb') as csvfile:
 		read = csv.reader(csvfile, delimiter = ',')
@@ -86,7 +86,7 @@ def export_csv(idx):
 		# print (type(idx))
 		for row in read:
 			if i in idx:
-				writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6]])
+				writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6], label_score[i]])
 			i += 1
 
 if __name__ == "__main__":
@@ -124,6 +124,8 @@ if __name__ == "__main__":
 	new_test_feature = pca.transform(test_vec)
 
 	label_pred = clf.predict(new_test_feature)
+	label_score = clf.decision_function(new_test_feature)
+
 	acc = float(sum(label_pred == label_test)) / len(label_test)
 	print ("Accuracy: " + str(acc))
 	print ("free food events in test data: " + str(sum(label_pred == 1)))
@@ -141,4 +143,6 @@ if __name__ == "__main__":
 
 	# export to csv
 	idx = np.array(np.where(label_pred == 1))
-	export_csv(idx)
+	label_score = label_score / np.amax(label_score)
+	# print (label_score)
+	export_csv(idx, label_score)
