@@ -81,13 +81,13 @@ def export_csv(idx, label_score):
 
 	with open ("sample_tagged_200.csv", 'rb') as csvfile:
 		read = csv.reader(csvfile, delimiter = ',')
-		i = 0
+		# i = 0
 		# print (type(i))
 		# print (type(idx))
 		for row in read:
-			if i in idx:
-				writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6], label_score[i]])
-			i += 1
+			# if i in idx:
+			writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6], label_score[i]])
+			# i += 1
 
 if __name__ == "__main__":
 	# id_dic: a dictionary mapping index to the event id
@@ -143,6 +143,5 @@ if __name__ == "__main__":
 
 	# export to csv
 	idx = np.array(np.where(label_pred == 1))
-	label_score = label_score / np.amax(label_score)
-	# print (label_score)
+	label_score = (label_score - np.amin(label_score)) / (np.amax(label_score) - np.amin(label_score))
 	export_csv(idx, label_score)
