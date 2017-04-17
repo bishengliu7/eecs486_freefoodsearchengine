@@ -13,6 +13,10 @@ def read_data(filename):
 	  	id_dic = {}
 	  	label = []
 	  	for row in read:
+	  		# print (row)
+	  		if i == 0:
+	  			i += 1
+	  			continue
 	  		id_dic[i] = row[0]
 	  		# event = {'id': row[0], 'desc': row[2], 'tags': row[5]}
 	  		doc.append(row[2] + " " + row[5])
@@ -75,19 +79,23 @@ def tfidf_test(corpus, inverted_index, idf):
 	return test_vec
 
 def export_csv(idx, label_score):
-	csvoutput = open('output/pca_svm.output', 'wb')
+	csvoutput = open('output/pca_svm.scores', 'wb')
 	writer = csv.writer(csvoutput, delimiter = ',')
   	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
 
 	with open ("sample_tagged_200.csv", 'rb') as csvfile:
 		read = csv.reader(csvfile, delimiter = ',')
-		# i = 0
+		i = 0
 		# print (type(i))
 		# print (type(idx))
 		for row in read:
+			if i == 0:
+				i += 1
+				continue
 			# if i in idx:
-			writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6], label_score[i]])
-			# i += 1
+			print (i)
+			writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6], label_score[i-1]])
+			i += 1
 
 if __name__ == "__main__":
 	# id_dic: a dictionary mapping index to the event id
@@ -125,6 +133,7 @@ if __name__ == "__main__":
 
 	label_pred = clf.predict(new_test_feature)
 	label_score = clf.decision_function(new_test_feature)
+	print (label_score.shape)
 
 	acc = float(sum(label_pred == label_test)) / len(label_test)
 	print ("Accuracy: " + str(acc))
