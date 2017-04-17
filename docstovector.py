@@ -162,13 +162,15 @@ if __name__ == "__main__":
 
 	csvfile_out = open("output/query_opt.output", 'wb')
 	eventwriter = csv.writer(csvfile_out, delimiter=',')
-	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
+	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
+
+	highest = scores[0][1]
 
 	for x in scores:
 		if x[1] > 0.0:
 			row = csv_dict[x[0]]
 			eventwriter.writerow([row['id'], row['title'], row['desc'], row['loc'],
-			   row['date'], row['tags'], row['label']])
+			   row['date'], row['tags'], row['label'], x[1] / highest])
 
 
 

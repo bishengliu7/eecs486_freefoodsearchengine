@@ -22,7 +22,7 @@ if __name__ == "__main__":
 					csv_dict[row['id']] = row
 				csv_counter[row['id']] += 1
 
-	csvfile_out = open('combined_result.csv', 'wb')
+	csvfile_out = open('output/combined_result.csv', 'wb')
 	eventwriter = csv.writer(csvfile_out, delimiter=',')
 	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags'])
 
