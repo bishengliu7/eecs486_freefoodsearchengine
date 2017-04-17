@@ -86,11 +86,9 @@ def opt_query(csv_file, alpha, beta, gamma):
 
 
 if __name__ == "__main__":
-	if len(sys.argv) < 2:
-		print("python choosebytags.py csv_file")
-		sys.exit(0)
 
-	csv_file = sys.argv[1]
+
+	csv_file = 'combined.csv'
 	beta = 1.0
 	gamma = 1.0
 	alpha = 0.707
@@ -162,7 +160,7 @@ if __name__ == "__main__":
 	print("max: " + str(max_score))
 	# print("final: " + str(sum(score) / correct))
 
-	csvfile_out = open("query_opt.output", 'wb')
+	csvfile_out = open("output/query_opt.output", 'wb')
 	eventwriter = csv.writer(csvfile_out, delimiter=',')
 	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
 

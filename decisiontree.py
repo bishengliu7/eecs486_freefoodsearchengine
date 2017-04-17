@@ -57,7 +57,7 @@ def test(clf, all_tags, csv_file):
   print ("test precision", float(sum(np.array(y) & np.array(res))) / sum(res))
   print ("test accuracy", float(sum(y == res)) / len(y))
   with open(csv_file ,'r') as infile:
-    with open('decisiontree.output', 'wb') as outfile:
+    with open('output/decisiontree.output', 'wb') as outfile:
       for idx, line in enumerate(infile):
         if idx == 0 or res[idx - 1]:
           outfile.write(line)
