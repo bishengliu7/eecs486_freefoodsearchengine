@@ -3,9 +3,10 @@ import csv
 from collections import defaultdict
 from collections import Counter
 
+
 if __name__ == "__main__":
 	if len(sys.argv) < 4:
-		print("python combine_results.py query_opt.csv decisiontree.csv pca_svm.csv")
+		print("python combine_results.py query_opt.output decisiontree.output pca_svm.output")
 		sys.exit(0)
 	result_csv = []
 	for i in range(1, len(sys.argv)):
@@ -54,3 +55,6 @@ if __name__ == "__main__":
 			   row['date'], row['tags']])
 
 	print(total, true, false)
+
+
+

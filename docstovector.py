@@ -137,7 +137,17 @@ if __name__ == "__main__":
 	max_score = 0.0
 	larger0 = 0
 	l_0_t = 0
+
+	csvfile_out = open("output/query_opt.scores", 'wb')
+	eventwriter = csv.writer(csvfile_out, delimiter=',')
+	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
+	highest = scores[0][1]
+	lowest = scores[-1][1]
+	ranges = highest - lowest
 	for x in scores:
+		row = csv_dict[x[0]]
+		eventwriter.writerow([row['id'], row['title'], row['desc'], row['loc'],
+		   row['date'], row['tags'], row['label'], (x[1] - lowest) / ranges])
 		if x[1] > 0.0:
 			print(x[0], x[1], labels[x[0]])
 			larger0 += 1
@@ -148,8 +158,7 @@ if __name__ == "__main__":
 		if labels[x[0]] == 'T':
 			correct += 1
 			score.append(correct / level)
-			# print('map: ', sum(score) / correct)
-			# print('correct: ', correct)
+
 			max_score = max(max_score, sum(score) / correct)
 
 	print(l_0_t, larger0)
