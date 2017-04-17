@@ -75,7 +75,7 @@ def tfidf_test(corpus, inverted_index, idf):
 	return test_vec
 
 def export_csv(idx):
-	csvoutput = open('svm_output.csv', 'wb')
+	csvoutput = open('pca_svm.output', 'wb')
 	writer = csv.writer(csvoutput, delimiter = ',')
   	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
 

@@ -162,7 +162,7 @@ if __name__ == "__main__":
 	print("max: " + str(max_score))
 	# print("final: " + str(sum(score) / correct))
 
-	csvfile_out = open("opt_q_out.csv", 'wb')
+	csvfile_out = open("query_opt.output", 'wb')
 	eventwriter = csv.writer(csvfile_out, delimiter=',')
 	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
 
