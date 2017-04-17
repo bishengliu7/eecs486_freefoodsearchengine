@@ -4,7 +4,7 @@ import numpy as np
 import csv
 from docstovector import stringToList
 
-def train(all_tags, csv_file):
+def train(csv_file):
   all_tags = []
   with open(csv_file, 'rU') as csvfile:
     reader = csv.DictReader(csvfile)
@@ -13,7 +13,9 @@ def train(all_tags, csv_file):
       for tag in tags:
         if tag not in all_tags:
           all_tags.append(tag)
-
+  # all_tags.remove('free')
+  # all_tags.remove('food')
+  # all_tags.remove('free food')
   X = []
   y = []
   with open(csv_file, 'rU') as csvfile:
@@ -22,7 +24,8 @@ def train(all_tags, csv_file):
       temp = [0] * len(all_tags)
       tags = stringToList(row['tags'])
       for tag in tags:
-        temp[all_tags.index(tag)] = 1
+        if tag in all_tags:
+          temp[all_tags.index(tag)] = 1
       X.append(temp)
       y.append(1 if row['label'] == 'T' else 0)
 
@@ -32,7 +35,6 @@ def train(all_tags, csv_file):
   print (all_tags_np[clf.feature_importances_ != 0], clf.feature_importances_[clf.feature_importances_ != 0])
   score = float(sum(np.array(y) & np.array(clf.predict(X)))) / sum(y)
   print ("train accuracy", score)
-  # print (1 - float(sum(y))/len(y))
   return clf, all_tags, score
 
 def test(clf, all_tags, csv_file):
@@ -53,20 +55,25 @@ def test(clf, all_tags, csv_file):
   score = float(sum(np.array(y) & np.array(res))) / sum(y)
   print ("test recall", score)
   print ("test precision", float(sum(np.array(y) & np.array(res))) / sum(res))
-  # print (float(sum(y == res)) / len(y))
+  print ("test accuracy", float(sum(y == res)) / len(y))
+  with open(csv_file ,'r') as infile:
+    with open('decisiontree.output', 'wb') as outfile:
+      for idx, line in enumerate(infile):
+        if idx == 0 or res[idx - 1]:
+          outfile.write(line)
   return res, score
 
 if __name__ == "__main__":
-  if len(sys.argv) < 2:
-    print("python decisiontree.py csv_file")
-    sys.exit(0)
+  # if len(sys.argv) < 2:
+  #   print("python decisiontree.py csv_file")
+  #   sys.exit(0)
 
-  csv_file = sys.argv[1]
+  csv_file = 'combined.csv'
 
-  all_tags = ['career', 'food', 'free', 'dance', 'multicultural', 'discussion',
-       'music', 'north campus', 'family', 'theater', 'graduate',
-       'undergraduate', 'concert', 'politics', 'social impact', 'umix',
-       'spanish studies', 'film festival']
-  clf, all_tags, s = train(all_tags, csv_file)
-  test(clf, all_tags, "350.csv")
-
+  # all_tags = ['career', 'food', 'free', 'dance', 'multicultural', 'discussion',
+  #      'music', 'north campus', 'family', 'theater', 'graduate',
+  #      'undergraduate', 'concert', 'politics', 'social impact', 'umix',
+  #      'spanish studies', 'film festival']
+  clf, all_tags, s = train(csv_file)
+  test(clf, all_tags, "sample_tagged_200.csv")
+  tree.export_graphviz(clf, out_file='tree.dot')
