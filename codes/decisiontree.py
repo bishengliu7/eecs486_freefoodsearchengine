@@ -5,6 +5,10 @@ import csv
 from query_optimize import stringToList
 
 def train(csv_file):
+# This function extracts the tags from the data, trains the decision tree 
+# based on the input data and outputs a tree and trainning accuracy
+# Input: a csv file contains events with labels
+# Output: trained decision tree, all extracted tags and trainning accuracy
   all_tags = []
   with open(csv_file, 'rU') as csvfile:
     reader = csv.DictReader(csvfile)
@@ -13,9 +17,7 @@ def train(csv_file):
       for tag in tags:
         if tag not in all_tags:
           all_tags.append(tag)
-  # all_tags.remove('free')
-  # all_tags.remove('food')
-  # all_tags.remove('free food')
+
   X = []
   y = []
   with open(csv_file, 'rU') as csvfile:
@@ -32,14 +34,15 @@ def train(csv_file):
   clf = tree.DecisionTreeClassifier(max_features=None, max_depth=None)
   clf = clf.fit(X, y)
   all_tags_np = np.array(all_tags)
-  print (all_tags_np[clf.feature_importances_ != 0], clf.feature_importances_[clf.feature_importances_ != 0])
   score = float(sum(np.array(y) & np.array(clf.predict(X)))) / sum(y)
   print ("train accuracy", score)
   return clf, all_tags, score
 
 def test(clf, all_tags, csv_file):
+# This function generate labels on the input data using a trained tree
+# Input: a trained decision tree, tags used and test data in csv file
+# Output: label of each event, and store all free food events in a csv file
   X = []
-  y = []
   with open(csv_file, 'rU') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
@@ -49,31 +52,23 @@ def test(clf, all_tags, csv_file):
         if tag in all_tags:
           temp[all_tags.index(tag)] = 1
       X.append(temp)
-      y.append(1 if row['label'] == 'T' else 0)
 
   res = clf.predict(X)
-  score = float(sum(np.array(y) & np.array(res))) / sum(y)
-  print ("test recall", score)
-  print ("test precision", float(sum(np.array(y) & np.array(res))) / sum(res))
-  print ("test accuracy", float(sum(y == res)) / len(y))
   with open(csv_file ,'r') as infile:
-    with open('output/decisiontree.output', 'wb') as outfile:
+    with open('decisiontree.output', 'wb') as outfile:
       for idx, line in enumerate(infile):
         if idx == 0 or res[idx - 1]:
           outfile.write(line)
-  return res, score
+  return res
 
 if __name__ == "__main__":
-  # if len(sys.argv) < 2:
-  #   print("python decisiontree.py csv_file")
-  #   sys.exit(0)
+  if len(sys.argv) < 3:
+    print("python decisiontree.py train_file, test_file")
+    sys.exit(0)
 
-  csv_file = 'combined.csv'
+  train_file = sys.argv[1]
+  test_file = sys.argv[2]
 
-  # all_tags = ['career', 'food', 'free', 'dance', 'multicultural', 'discussion',
-  #      'music', 'north campus', 'family', 'theater', 'graduate',
-  #      'undergraduate', 'concert', 'politics', 'social impact', 'umix',
-  #      'spanish studies', 'film festival']
-  clf, all_tags, s = train(csv_file)
-  test(clf, all_tags, "sample_tagged_200.csv")
-  tree.export_graphviz(clf, out_file='tree.dot')
+  clf, all_tags, s = train(train_file)
+  test(clf, all_tags, test_file)
+  # tree.export_graphviz(clf, out_file='tree.dot')
