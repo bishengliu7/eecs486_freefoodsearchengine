@@ -10,19 +10,17 @@ def read_data(filename):
 	  	read = csv.reader(csvfile, delimiter = ',')
 	  	doc = [];
 	  	i = 0
-	  	id_dic = {}
 	  	label = []
 	  	for row in read:
 	  		# print (row)
 	  		if i == 0:
 	  			i += 1
 	  			continue
-	  		id_dic[i] = row[0]
 	  		# event = {'id': row[0], 'desc': row[2], 'tags': row[5]}
 	  		doc.append(row[2] + " " + row[5])
 	  		label.append(row[6])
 	  		i += 1
-  	return id_dic, doc, label
+  	return doc, label
 
 
 
@@ -98,11 +96,11 @@ def export_csv(idx, label_score):
 			i += 1
 
 if __name__ == "__main__":
-	# id_dic: a dictionary mapping index to the event id
-	# corpus: a list. description + tag
-	id_dic, corpus_train, label_train = read_data('combined.csv')
-	test_id_dic, corpus_test, label_test = read_data("sample_tagged_200.csv")
-	# print (label)
+	# read data
+	corpus_train, label_train = read_data('combined.csv')
+	corpus_test, label_test = read_data("sample_tagged_200.csv")
+
+	# convert T/F labels to 0 and 1, where T: 1, F: 0
 	for i in range(len(label_train)):
 		if label_train[i] == 'T':
 			label_train[i] = 1
@@ -113,12 +111,11 @@ if __name__ == "__main__":
 			label_test[i] = 1
 		else:
 			label_test[i] = 0
-	# print (label)
 
-	# calculate tfidf for each documents
+	# calculate tfidf for each documents, this is the same as what we've done in assignment
 	word_vec, inverted_index, idf = tfidf(corpus_train)
 
-	# use pca to reduce dimension
+	# use pca package to reduce dimension
 	pca = PCA(n_components = 300)
 	new_feature_vector = pca.fit_transform(word_vec)
 	print (new_feature_vector.shape)
@@ -127,14 +124,17 @@ if __name__ == "__main__":
 	clf = SVC(kernel = 'linear', class_weight = {0: 1, 1: 0.4})
 	clf.fit(new_feature_vector, label_train)
 
-	# test 
+	# test
+	# first calculate tfidf for test data, then use pca to reduce to the same dimension
 	test_vec = tfidf_test(corpus_test, inverted_index, idf)
 	new_test_feature = pca.transform(test_vec)
 
+	# do prediction using SVM model
 	label_pred = clf.predict(new_test_feature)
 	label_score = clf.decision_function(new_test_feature)
 	print (label_score.shape)
 
+	# Evaluation part
 	acc = float(sum(label_pred == label_test)) / len(label_test)
 	print ("Accuracy: " + str(acc))
 	print ("free food events in test data: " + str(sum(label_pred == 1)))
