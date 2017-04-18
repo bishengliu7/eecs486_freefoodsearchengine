@@ -27,7 +27,7 @@ def map(scores, csv_dict):
 if __name__ == "__main__":
 	csv_dict = defaultdict()
 	correct = 0.0
-	with open('sample_tagged_200.csv', 'rU') as csvfile:
+	with open('../data/test.csv', 'rU') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
 			csv_dict[row['id']] = row
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
 	#calculate map for query optimization
 	query_opt_score = defaultdict()
-	with open('output/query_opt.scores', 'rU') as csvfile:
+	with open('../output/query_opt.scores', 'rU') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
 			query_opt_score[row['id']] = row['score']
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
 	#calculate map for pca_svm
 	pca_svm_score = defaultdict()
-	with open('output/pca_svm.scores', 'rU') as csvfile:
+	with open('../output/pca_svm.scores', 'rU') as csvfile:
 		reader = csv.DictReader(csvfile)
 		for row in reader:
 			pca_svm_score[row['id']] = row['score']

@@ -14,8 +14,15 @@ from events_filter import tag_filter
 
 if __name__ == "__main__":
 	if len(sys.argv) < 2:
-		print("python choosebytags.py csv_file")
+		print("python choosebytags.py csv_file tag1 tag2 tag3")
 		sys.exit(0)
 
 	csv_file = sys.argv[1]
-	tag_filter(['free', 'food'], csv_file, '../data/events_with_food_and_free_tags.csv')
+	tags = []
+	outputfile = ""
+	for i in range(2, len(sys.argv)):
+		print(sys.argv[i], i)
+		tags.append(sys.argv[i])
+		outputfile += sys.argv[i]
+	outputfile = '../data/' + outputfile + '.csv'
+	tag_filter(tags, csv_file, outputfile)
