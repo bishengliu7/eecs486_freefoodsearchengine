@@ -96,8 +96,6 @@ if __name__ == "__main__":
 
 	doc_scores = sorted(query.items(), key=operator.itemgetter(1))
 	doc_scores.reverse()
-	for x in doc_scores:
-		print(x)
 
 	csv_dict = defaultdict()
 
@@ -131,27 +129,6 @@ if __name__ == "__main__":
 	correct = 0.0
 	score = []
 
-
-	#output all the scores for reranking scheme
-	csvfile_out = open("../output/query_opt.scores", 'wb')
-	eventwriter = csv.writer(csvfile_out, delimiter=',')
-	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
-	highest = scores[0][1]
-	lowest = scores[-1][1]
-	ranges = highest - lowest
-	for x in scores:
-		row = csv_dict[x[0]]
-		eventwriter.writerow([row['id'], row['title'], row['desc'], row['loc'],
-		   row['date'], row['tags'], row['label'], (x[1] - lowest) / ranges])
-		total += 1
-		if labels[x[0]] == 'T':
-			correct += 1
-			score.append(correct / total)
-
-	print(correct, total)
-	print(score)
-	print("final map: " + str(sum(score) / correct))
-
 	csvfile_out = open("../output/query_opt.output", 'wb')
 	eventwriter = csv.writer(csvfile_out, delimiter=',')
 	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
@@ -162,6 +139,29 @@ if __name__ == "__main__":
 			row = csv_dict[x[0]]
 			eventwriter.writerow([row['id'], row['title'], row['desc'], row['loc'],
 			   row['date'], row['tags'], row['label'], x[1] / highest])
+
+	if len(sys.argv) == 1:
+		#output all the scores for reranking scheme
+		csvfile_out = open("../output/query_opt.scores", 'wb')
+		eventwriter = csv.writer(csvfile_out, delimiter=',')
+		eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
+		highest = scores[0][1]
+		lowest = scores[-1][1]
+		ranges = highest - lowest
+		for x in scores:
+			row = csv_dict[x[0]]
+			eventwriter.writerow([row['id'], row['title'], row['desc'], row['loc'],
+			   row['date'], row['tags'], row['label'], (x[1] - lowest) / ranges])
+			total += 1
+			if labels[x[0]] == 'T':
+				correct += 1
+				score.append(correct / total)
+
+		print(correct, total)
+		print(score)
+		print("final map: " + str(sum(score) / correct))
+
+
 
 
 
