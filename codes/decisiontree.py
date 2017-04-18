@@ -2,7 +2,7 @@ import sys
 from sklearn import tree
 import numpy as np
 import csv
-from docstovector import stringToList
+from query_optimize import stringToList
 
 def train(csv_file):
   all_tags = []

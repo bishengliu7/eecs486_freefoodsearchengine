@@ -7,7 +7,8 @@ import os
 import re
 import sys
 import random
-from docstovector import stringToList
+from query_optimize import stringToList
+from events_filter import tag_filter
 
 
 
@@ -17,16 +18,4 @@ if __name__ == "__main__":
 		sys.exit(0)
 
 	csv_file = sys.argv[1]
-	writecsv = open('events_with_food_and_free_tags.csv', 'wb')
-	eventwriter = csv.writer(writecsv, delimiter=',')
-	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
-
-	with open(csv_file, 'rU') as csvfile:
-		reader = csv.DictReader(csvfile)
-		for row in reader:
-			if 'food' in stringToList(row['tags'].lower()) and 'free' in stringToList(row['tags'].lower()):
-				eventwriter.writerow([row['id'], row['title'], row['desc'], row['loc'],
-				   row['date'], row['tags'], 'T'])
-
-
-
+	tag_filter(['free', 'food'], csv_file, '../data/events_with_food_and_free_tags.csv')
