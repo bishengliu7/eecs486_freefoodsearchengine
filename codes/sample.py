@@ -2,9 +2,13 @@ import random
 import sys
 
 def sample(filename, num, outfile):
+  #random choose some files to generate a sample with specific size
   f = open(outfile, 'wb')
+  file  = list(open(filename))
+  f.write(file[0])
+  file.pop(0)
 
-  for i in random.sample(list(open(filename)), num):
+  for i in random.sample(file, num):
     f.write(i)
 
 

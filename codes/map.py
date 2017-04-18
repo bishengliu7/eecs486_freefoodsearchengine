@@ -12,6 +12,7 @@ import ast
 import numpy as np
 
 def map(scores, csv_dict):
+	#calculate the moving average precision of the output scores
 	result = []
 	curr = 0.0
 	correct = 0.0
@@ -33,6 +34,7 @@ if __name__ == "__main__":
 			if row['label'] == 'T':
 				correct += 1
 
+	#calculate map for query optimization
 	query_opt_score = defaultdict()
 	with open('output/query_opt.scores', 'rU') as csvfile:
 		reader = csv.DictReader(csvfile)
@@ -43,7 +45,7 @@ if __name__ == "__main__":
 	print("q_opt_scores")
 	print(map(q_opt_scores, csv_dict))
 
-
+	#calculate map for pca_svm
 	pca_svm_score = defaultdict()
 	with open('output/pca_svm.scores', 'rU') as csvfile:
 		reader = csv.DictReader(csvfile)
@@ -54,6 +56,7 @@ if __name__ == "__main__":
 	print("pca_svm_scores")
 	print(map(pca_svm_scores, csv_dict))
 
+	#calculate map for combined score with different alpha ranging form 0.0 to 1.0 stepped by 0.1
 	alphas = np.arange(0,1.1,0.1)
 	score = []
 	for alpha in alphas:
