@@ -6,6 +6,11 @@ from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 
 def read_data(filename):
+	'''
+	Input: filename, string
+	Output: doc, a list containing all the words in corpus
+		    label, a list containing all the labels
+	'''
   	with open(filename, 'rb') as csvfile:
 	  	read = csv.reader(csvfile, delimiter = ',')
 	  	doc = [];
@@ -23,8 +28,13 @@ def read_data(filename):
   	return doc, label
 
 
-
 def tfidf(corpus):
+	'''
+	Input: corpus, a list of word
+	Output: word_vec, a matrix containing tf-idf weight of corpus
+			inverted_index, a dictionary of all the words and term frequency in each event
+			idf, a dictionary mapping from each word to its inverted document frequency
+	'''
 	inverted_index = {}
 	num_doc = len(corpus)
 	for i in range(num_doc):
@@ -54,6 +64,12 @@ def tfidf(corpus):
 	return word_vec, inverted_index, idf
 
 def tfidf_test(corpus, inverted_index, idf):
+	'''
+	Input: corpus, a list of word
+		   inverted_index, inverted_index dictionary for training data
+		   idf, inverted document frequency for training data
+	Output: test_vec, td-idf weight for test data
+	'''
 	test_index = {}
 	test_vec = np.zeros((len(corpus), len(inverted_index)))
 	for i in range(len(corpus)):
@@ -77,28 +93,30 @@ def tfidf_test(corpus, inverted_index, idf):
 	return test_vec
 
 def export_csv(idx, label_score):
-	csvoutput = open('output/pca_svm.scores', 'wb')
+	'''
+	Input: idx, a list of indices that are predicted as T
+		   label_score, a list of scores from SVM
+	'''
+	csvoutput = open('../output/pca_svm.scores', 'wb')
 	writer = csv.writer(csvoutput, delimiter = ',')
-  	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
+  	writer.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label'])
 
-	with open ("sample_tagged_200.csv", 'rb') as csvfile:
+	with open ("../data/test.csv", 'rb') as csvfile:
 		read = csv.reader(csvfile, delimiter = ',')
 		i = 0
-		# print (type(i))
-		# print (type(idx))
+		first = 0
 		for row in read:
-			if i == 0:
-				i += 1
+			if first == 0:
+				first = 1
 				continue
-			# if i in idx:
-			print (i)
-			writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6], label_score[i-1]])
+			if i in idx:
+				writer.writerow([row[0], row[1], row[2], row[3], row[4], row[5], row[6]])
 			i += 1
 
 if __name__ == "__main__":
 	# read data
-	corpus_train, label_train = read_data('combined.csv')
-	corpus_test, label_test = read_data("sample_tagged_200.csv")
+	corpus_train, label_train = read_data('../data/training.csv')
+	corpus_test, label_test = read_data("../data/test.csv")
 
 	# convert T/F labels to 0 and 1, where T: 1, F: 0
 	for i in range(len(label_train)):
@@ -137,16 +155,16 @@ if __name__ == "__main__":
 	# Evaluation part
 	acc = float(sum(label_pred == label_test)) / len(label_test)
 	print ("Accuracy: " + str(acc))
-	print ("free food events in test data: " + str(sum(label_pred == 1)))
-	print ("ground truth free food events: " + str(sum(label_test)))
+	print ("Predicted free food events in test data: " + str(sum(label_pred == 1)))
+	print ("Ground truth free food events: " + str(sum(label_test)))
 
 	# calculate recall
 	correct_pred = 0
 	for i in range(len(label_test)):
-		if (label_pred[i] == label_test[i] and label_pred[i] == 1):
+		if (label_pred[i] == label_test[i] and label_test[i] == 1):
 			correct_pred += 1
 	precision = float(correct_pred) / sum(label_pred)
-	print ("correctly retrieved: " + str(correct_pred))
+	print ("Correctly retrieved: " + str(correct_pred))
 	print ("Precision: " + str(precision))
 
 
