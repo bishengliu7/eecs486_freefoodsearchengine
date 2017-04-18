@@ -37,7 +37,7 @@ Take ```/data/training.csv``` for training sets and ```/data/test.csv``` for tes
 
 ### decisiontree.py
 ```
-python decisiontree.py
+python decisiontree.py train.csv test.csv
 ```
 Apply decision tree on the event tags and create branches to classify each event using the information gain based on the Gini Impurity.   
 Take ```/data/training.csv``` for training sets and ```/data/test.csv``` for testing sets. Generate the output of free food events at ```/output/decisiontree.output```
