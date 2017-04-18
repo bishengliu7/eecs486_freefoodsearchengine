@@ -133,6 +133,7 @@ if __name__ == "__main__":
 	eventwriter = csv.writer(csvfile_out, delimiter=',')
 	eventwriter.writerow(['id', 'title', 'desc', 'loc', 'date', 'tags', 'label', 'score'])
 
+	highest = scores[0][1]
 	#output the events with positive score
 	for x in scores:
 		if x[1] > 0.0:
