@@ -66,8 +66,8 @@ if __name__ == "__main__":
     print("python decisiontree.py train_file, test_file")
     sys.exit(0)
 
-  train_file = sys.argv[1]
-  test_file = sys.argv[2]
+  train_file = '../data/training.csv'
+  test_file = '../data/test.csv'
 
   clf, all_tags, s = train(train_file)
   test(clf, all_tags, test_file)
